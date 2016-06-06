@@ -1,0 +1,13 @@
+{
+	"name" : "Horizontal Listbox",
+	"description" : "Horizontal Listbox Extension Example",
+	"icon" : "list",
+	"type" : "visualization",
+	"version": "2.0",
+	"author" : "Qlik",
+	"homepage" : "http://help.qlik.com/sense/en-US/developer",
+	"keywords" : "qlik-sense, visualization",
+	"license" : "MIT",
+	"repository" : "",
+    "dependencies" : { "qlik-sense" : ">=2.1.x" }
+}
