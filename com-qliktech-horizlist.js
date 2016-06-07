@@ -312,7 +312,14 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 
 			if(timerCnt>0)
 			{
-				window.setTimeout(incrementDim(),100000);
+				setTimeout(function() {
+									i++;
+									if(i>=cardinal)
+										i=0;
+									field.clear();
+									field.select([dataRow[i].qElemNumber],true,false);
+								},
+							500);
 				timerCnt--;
 			}
 
