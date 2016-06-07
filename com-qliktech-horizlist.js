@@ -1,5 +1,14 @@
-define(["jquery", "text!./horizlist.css"], function($, cssContent) {'use strict';
+define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) {
+	'use strict';
 	$("<style>").html(cssContent).appendTo("head");
+
+	var i=0,timerCnt=0;
+	var app = qlik.currApp(this);
+
+	function createBtn(cmd, text) {
+		return '<button class="qui-button" style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
+	}
+
 	return {
 		initialProperties : {
 			qListObjectDef : {
@@ -223,6 +232,32 @@ define(["jquery", "text!./horizlist.css"], function($, cssContent) {'use strict'
 						}
 					}
 				},
+
+				buttons : {
+					type : "items",
+					label : "App buttons",
+					items : {
+						clearButton : {
+							ref : "buttons.clear",
+							label : "ClearAll",
+							type : "boolean",
+							defaultValue : true
+						},
+						backButton : {
+							ref : "buttons.back",
+							label : "Back",
+							type : "boolean",
+							defaultValue : true
+						},
+						forwardButton : {
+							ref : "buttons.forward",
+							label : "Forward",
+							type : "boolean",
+							defaultValue : true
+						}
+					}
+				},
+
 				settings : {
 					uses : "settings"
 				}
@@ -232,36 +267,82 @@ define(["jquery", "text!./horizlist.css"], function($, cssContent) {'use strict'
 			canTakeSnapshot : true
 		},
 		paint : function($element, layout) {
-			var self = this, html = "<ul>", style;
-			if(layout.fixed) {
-				style = 'style="width:' + layout.width + (layout.percent ? '%' : 'px') + ';"';
-			} else {
-				style = '';
+			//Store the dimension into an array
+			var tempDataRow=this.backendApi.getDataRow(0);
+
+			//Just for checking, append the data from first cell
+			var html = "<ul>";
+			if (tempDataRow!=null)
+			{
+				html+="data :"+tempDataRow[0].qText;
+				html+="</br>"
+				html+="state:"+tempDataRow[0].qState;
 			}
-			this.backendApi.eachDataRow(function(rownum, row) {
-				html += '<li ' + style + ' class="data state' + row[0].qState + '" data-value="' + row[0].qElemNumber + '">' + row[0].qText;
-				if(row[0].qFrequency) {
-					html += '<span>' + row[0].qFrequency + '</span>';
-				}
-				html += '</li>';
-			});
 			html += "</ul>";
+
+			//rendering buttons
+			html += '<div class="qui-buttongroup">';
+			html += createBtn("clearAll", "Reset");
+			html += createBtn("back", "Back");
+			html += createBtn("forward", "Forward");
+			html += createBtn("play", "Play");
+			html += '</div>';
+
 			$element.html(html);
-			if(this.selectionsEnabled && layout.selectionMode !== "NO") {
-				$element.find('li').on('qv-activate', function() {
-					if(this.hasAttribute("data-value")) {
-						var value = parseInt(this.getAttribute("data-value"), 10), dim = 0;
-						if(layout.selectionMode === "CONFIRM") {
-							self.selectValues(dim, [value], true);
-							$(this).toggleClass("selected");
-						} else if(layout.selectionMode === "REPLACE") {
-							self.backendApi.selectValues(dim, [value], false);
-						} else {
-							self.backendApi.selectValues(dim, [value], true);
-						}
-					}
-				});
+
+
+			var tempTitle=this.backendApi.getDimensionInfos()[0].qFallbackTitle;
+			var tempCard=this.backendApi.getDimensionInfos()[0].qCardinal;
+			var temp=this.backendApi.getDimensionInfos()[0];
+
+			function incrementDim()
+			{
+				//alert("hi");
+				i++;
+				if(i>=tempCard)
+					i=0;
+				app.field(tempTitle).clear();
+				app.field(tempTitle).select([i],true,false);
 			}
+
+			if(timerCnt>0)
+			{
+				timerCnt--;
+				setTimeout(incrementDim(),80000);
+			}
+
+
+			$element.find('button').on('qv-activate', function() {
+				console.log(temp);
+				switch($(this).data('cmd')) {
+					case 'clearAll':
+						app.field(tempTitle).clear();
+						i=0;
+						app.field(tempTitle).select([i],true,false);
+						break;
+					case 'forward':
+						i++;
+						if(i>=tempCard)
+							i=0;
+						app.field(tempTitle).clear();
+						app.field(tempTitle).select([i],true,false);
+						break;
+					case 'back':
+						i--;
+						if(i<0)
+							i=tempCard-1;
+						app.field(tempTitle).clear();
+						app.field(tempTitle).select([i],true,false);
+						break;
+					case 'play':
+						app.field(tempTitle).clear();
+						i=0;
+						app.field(tempTitle).select([i],true,false);
+						timerCnt=tempCard;
+					break;
+				}
+			});
+
 		}
 	};
 });
