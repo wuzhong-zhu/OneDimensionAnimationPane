@@ -1,4 +1,4 @@
-define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) {
+define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qlik ) {
 	'use strict';
 	$("<style>").html(cssContent).appendTo("head");
 

@@ -1,6 +1,6 @@
 {
-	"name" : "Horizontal Listbox",
-	"description" : "Horizontal Listbox Extension Example",
+	"name" : "Single dimension animation pane",
+	"description" : "Single dimension animation pane",
 	"icon" : "list",
 	"type" : "visualization",
 	"version": "2.0",
