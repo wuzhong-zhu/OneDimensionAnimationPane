@@ -3,6 +3,7 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 	$("<style>").html(cssContent).appendTo("head");
 
 	var i=0,timerCnt=0;
+	var stopFlag=false;
 
 	function createBtn(cmd, text) {
 		return '<button class="qui-button" style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
@@ -266,28 +267,33 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 			canTakeSnapshot : true
 		},
 		paint : function($element, layout) {
-			//Store the dimension into an array
-			var tempDataRow=this.backendApi.getDataRow(0);
 
+			//For Feedback:
+			// //Store the dimension into an array
+			var tempDataRow=this.backendApi.getDataRow(0);
 			console.log(tempDataRow);
 			console.log(info);
 
-			//Just for checking, append the data in first cell
+			// //Just for checking, append the data in first cell
 			var html = "<ul>";
 			if (tempDataRow!=null)
 			{
 				html+="data :"+tempDataRow[0].qText;
-				html+="</br>"
-				html+="state:"+tempDataRow[0].qState;
+				//html+="state:"+tempDataRow[0].qState;
 			}
 			html += "</ul>";
 
 			//rendering buttons
 			html += '<div class="qui-buttongroup">';
-			html += createBtn("clearAll", "Reset");
-			html += createBtn("back", "Back");
-			html += createBtn("forward", "Forward");
-			html += createBtn("play", "Play");
+			html += createBtn("Reset", "Reset");
+			html += createBtn("clearAll", "Clear");
+			html += "</br>";
+			html += createBtn("back", "Prev");
+			html += createBtn("forward", "Next");
+			if(timerCnt==0)
+				html += createBtn("play", "Play");
+			else
+				html += createBtn("play", "Stop");
 			html += '</div>';
 
 			$element.html(html);
@@ -296,30 +302,24 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 			var info=this.backendApi.getDimensionInfos()[0];
 			var title=info.qFallbackTitle;
 			var cardinal=info.qCardinal;
+			//get field data. why field data? because field data remains unchanged despite changing in data frame
 			var field=qlik.currApp(this).field(title);
 			var dataRow=field.getData().rows;
-			console.log(i);
 
-			function incrementDim()
-			{
-				//alert("hi");
-				i++;
-				if(i>=cardinal)
-					i=0;
-				field.clear();
-				field.select([dataRow[i].qElemNumber],true,false);
-			}
-
+			//timer session for animation
+			//timeout ids are stored in timeOutArr
 			if(timerCnt>0)
 			{
-				setTimeout(function() {
+				setTimeout(	function() {
+								if(stopFlag==false)
+								{
 									i++;
 									if(i>=cardinal)
 										i=0;
 									field.clear();
 									field.select([dataRow[i].qElemNumber],true,false);
-								},
-							500);
+								}
+							},400);
 				timerCnt--;
 			}
 
@@ -328,11 +328,18 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 				//console.log(info);
 				switch($(this).data('cmd')) {
 					case 'clearAll':
+						timerCnt=0;
+						field.clear();
+						i=0;
+						break;
+					case 'Reset':
+						timerCnt=0;
 						field.clear();
 						i=0;
 						field.select([dataRow[i].qElemNumber],true,false);
 						break;
 					case 'forward':
+						timerCnt=0;
 						i++;
 						if(i>=cardinal)
 							i=0;
@@ -340,6 +347,7 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 						field.select([dataRow[i].qElemNumber],true,false);
 						break;
 					case 'back':
+						timerCnt=0;
 						i--;
 						if(i<0)
 							i=cardinal-1;
@@ -347,9 +355,21 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 						field.select([dataRow[i].qElemNumber],true,false);
 						break;
 					case 'play':
-						field.clear();
-						field.select([dataRow[i].qElemNumber],true,false);
-						timerCnt=cardinal;
+						if(timerCnt==0)
+						{
+							stopFlag=false;
+							field.clear();
+							field.select([dataRow[i].qElemNumber],true,false);
+							timerCnt=cardinal;
+						}
+						else
+						{
+							alert("animation stoped");
+							stopFlag=true;
+							timerCnt=0;
+							field.clear();
+							field.select([dataRow[i].qElemNumber],true,false);
+						}
 					break;
 				}
 			});
