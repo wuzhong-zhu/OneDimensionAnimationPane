@@ -272,7 +272,7 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 			console.log(tempDataRow);
 			console.log(info);
 
-			//Just for checking, append the data from first cell
+			//Just for checking, append the data in first cell
 			var html = "<ul>";
 			if (tempDataRow!=null)
 			{
@@ -297,6 +297,8 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 			var title=info.qFallbackTitle;
 			var cardinal=info.qCardinal;
 			var field=qlik.currApp(this).field(title);
+			var dataRow=field.getData().rows;
+			console.log(i);
 
 			function incrementDim()
 			{
@@ -305,42 +307,41 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 				if(i>=cardinal)
 					i=0;
 				field.clear();
-				field.select([i],true,false);
+				field.select([dataRow[i].qElemNumber],true,false);
 			}
 
 			if(timerCnt>0)
 			{
+				window.setTimeout(incrementDim(),100000);
 				timerCnt--;
-				setTimeout(incrementDim(),80000);
 			}
 
 
 			$element.find('button').on('qv-activate', function() {
-				console.log(info);
+				//console.log(info);
 				switch($(this).data('cmd')) {
 					case 'clearAll':
 						field.clear();
 						i=0;
-						field.select([i],true,false);
+						field.select([dataRow[i].qElemNumber],true,false);
 						break;
 					case 'forward':
 						i++;
 						if(i>=cardinal)
 							i=0;
 						field.clear();
-						field.select([i],true,false);
+						field.select([dataRow[i].qElemNumber],true,false);
 						break;
 					case 'back':
 						i--;
 						if(i<0)
 							i=cardinal-1;
 						field.clear();
-						field.select([i],true,false);
+						field.select([dataRow[i].qElemNumber],true,false);
 						break;
 					case 'play':
 						field.clear();
-						i=0;
-						field.select([i],true,false);
+						field.select([dataRow[i].qElemNumber],true,false);
 						timerCnt=cardinal;
 					break;
 				}
