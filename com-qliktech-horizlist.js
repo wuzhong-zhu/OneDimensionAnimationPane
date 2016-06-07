@@ -3,7 +3,6 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 	$("<style>").html(cssContent).appendTo("head");
 
 	var i=0,timerCnt=0;
-	var app = qlik.currApp(this);
 
 	function createBtn(cmd, text) {
 		return '<button class="qui-button" style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
@@ -270,6 +269,9 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 			//Store the dimension into an array
 			var tempDataRow=this.backendApi.getDataRow(0);
 
+			console.log(tempDataRow);
+			console.log(info);
+
 			//Just for checking, append the data from first cell
 			var html = "<ul>";
 			if (tempDataRow!=null)
@@ -290,19 +292,20 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 
 			$element.html(html);
 
-
-			var tempTitle=this.backendApi.getDimensionInfos()[0].qFallbackTitle;
-			var tempCard=this.backendApi.getDimensionInfos()[0].qCardinal;
-			var temp=this.backendApi.getDimensionInfos()[0];
+			//get dimension infos (title and cardinal)
+			var info=this.backendApi.getDimensionInfos()[0];
+			var title=info.qFallbackTitle;
+			var cardinal=info.qCardinal;
+			var field=qlik.currApp(this).field(title);
 
 			function incrementDim()
 			{
 				//alert("hi");
 				i++;
-				if(i>=tempCard)
+				if(i>=cardinal)
 					i=0;
-				app.field(tempTitle).clear();
-				app.field(tempTitle).select([i],true,false);
+				field.clear();
+				field.select([i],true,false);
 			}
 
 			if(timerCnt>0)
@@ -313,32 +316,32 @@ define(["jquery", "text!./horizlist.css","qlik"], function($, cssContent,qlik ) 
 
 
 			$element.find('button').on('qv-activate', function() {
-				console.log(temp);
+				console.log(info);
 				switch($(this).data('cmd')) {
 					case 'clearAll':
-						app.field(tempTitle).clear();
+						field.clear();
 						i=0;
-						app.field(tempTitle).select([i],true,false);
+						field.select([i],true,false);
 						break;
 					case 'forward':
 						i++;
-						if(i>=tempCard)
+						if(i>=cardinal)
 							i=0;
-						app.field(tempTitle).clear();
-						app.field(tempTitle).select([i],true,false);
+						field.clear();
+						field.select([i],true,false);
 						break;
 					case 'back':
 						i--;
 						if(i<0)
-							i=tempCard-1;
-						app.field(tempTitle).clear();
-						app.field(tempTitle).select([i],true,false);
+							i=cardinal-1;
+						field.clear();
+						field.select([i],true,false);
 						break;
 					case 'play':
-						app.field(tempTitle).clear();
+						field.clear();
 						i=0;
-						app.field(tempTitle).select([i],true,false);
-						timerCnt=tempCard;
+						field.select([i],true,false);
+						timerCnt=cardinal;
 					break;
 				}
 			});
