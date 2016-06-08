@@ -31,61 +31,16 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			type : "items",
 			component : "accordion",
 			items : {
-				width : {
+				config : {
 					type : "items",
-					label : "Width and Selections",
+					label : "Configuration",
 					items : {
-						fixed : {
-							ref : "fixed",
-							label : "Fixed width",
-							type : "boolean",
-							defaultValue : true
-						},
-						width : {
-							ref : "width",
-							label : "Width",
+						interval : {
+							ref : "interval",
+							label : "Time interval",
 							type : "number",
-							defaultValue : 25,
-							show : function(data) {
-								return data.fixed;
-							}
+							defaultValue : 1500,
 						},
-						percent : {
-							ref : "percent",
-							type : "boolean",
-							label : "Unit",
-							component : "switch",
-							defaultValue : true,
-							options : [{
-								value : true,
-								label : "Percent"
-							}, {
-								value : false,
-								label : "Pixels"
-							}],
-							show : function(data) {
-								return data.fixed;
-							}
-						},
-						selection : {
-							type : "string",
-							component : "dropdown",
-							label : "Selection mode",
-							ref : "selectionMode",
-							options : [{
-								value : "NO",
-								label : "No selections"
-							}, {
-								value : "CONFIRM",
-								label : "Confirm selections"
-							}, {
-								value : "QUICK",
-								label : "Quick selection"
-							}, {
-								value : "REPLACE",
-								label : "Replace selection"
-							}]
-						}
 					}
 				},
 				dimension : {
@@ -233,31 +188,6 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 					}
 				},
 
-				buttons : {
-					type : "items",
-					label : "App buttons",
-					items : {
-						clearButton : {
-							ref : "buttons.clear",
-							label : "ClearAll",
-							type : "boolean",
-							defaultValue : true
-						},
-						backButton : {
-							ref : "buttons.back",
-							label : "Back",
-							type : "boolean",
-							defaultValue : true
-						},
-						forwardButton : {
-							ref : "buttons.forward",
-							label : "Forward",
-							type : "boolean",
-							defaultValue : true
-						}
-					}
-				},
-
 				settings : {
 					uses : "settings"
 				}
@@ -271,8 +201,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			//For Feedback:
 			// //Store the dimension into an array
 			var tempDataRow=this.backendApi.getDataRow(0);
-			console.log(tempDataRow);
-			console.log(info);
+			//console.log(tempDataRow);
 
 			// //Just for checking, append the data in first cell
 			var html = "<ul>";
@@ -318,8 +247,8 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 										i=0;
 									field.clear();
 									field.select([dataRow[i].qElemNumber],true,false);
-								}
-							},400);
+								} 
+							},layout.interval);
 				timerCnt--;
 			}
 
