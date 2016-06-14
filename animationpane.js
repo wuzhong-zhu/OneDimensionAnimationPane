@@ -9,6 +9,14 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 		return '<button class="qui-button" style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
 	}
 
+	function Reset(dataRow,controlApi)
+	{
+		if (!(controlApi.getDimensionInfos()[0].qStateCounts.qSelected==1 && controlApi.getDataRow(0)[0].qElemNumber==0))
+		{
+			controlApi.selectValues(0, [0], false);
+		}
+	}
+
 	return {
 		initialProperties : {
 			qListObjectDef : {
@@ -196,27 +204,19 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 		snapshot : {
 			canTakeSnapshot : true
 		},
+
 		paint : function($element, layout) {
 
 			//For Feedback:
 			// //Store the dimension into an array
-			var tempDataRow=this.backendApi.getDataRow(0);
-			//console.log(tempDataRow);
+			var api=this.backendApi;
+			var tempDataRow=api.getDataRow(0);
+			var cardinal=api.getRowCount();
 
-			// //Just for checking, append the data in first cell
 			var html = "<ul>";
-			if (tempDataRow!=null)
-			{
-				html+="data :"+tempDataRow[0].qText;
-				//html+="state:"+tempDataRow[0].qState;
-			}
-			html += "</ul>";
-
 			//rendering buttons
 			html += '<div class="qui-buttongroup">';
 			html += createBtn("Reset", "Reset");
-			html += createBtn("clearAll", "Clear");
-			html += "</br>";
 			html += createBtn("back", "Prev");
 			html += createBtn("forward", "Next");
 			if(timerCnt==0)
@@ -227,16 +227,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 
 			$element.html(html);
 
-			//get dimension infos (title and cardinal)
-			var info=this.backendApi.getDimensionInfos()[0];
-			var title=info.qFallbackTitle;
-			var cardinal=info.qCardinal;
-			//get field data. why field data? because field data remains unchanged despite changing in data frame
-			var field=qlik.currApp(this).field(title);
-			var dataRow=field.getData().rows;
-
-			//timer session for animation
-			//timeout ids are stored in timeOutArr
+			//trigers dimension incremental
 			if(timerCnt>0)
 			{
 				setTimeout(	function() {
@@ -245,64 +236,56 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 									i++;
 									if(i>=cardinal)
 										i=0;
-									field.clear();
-									field.select([dataRow[i].qElemNumber],true,false);
-								} 
+									api.selectValues(0, [i], false);
+								}
 							},layout.interval);
 				timerCnt--;
 			}
 
-
 			$element.find('button').on('qv-activate', function() {
-				//console.log(info);
 				switch($(this).data('cmd')) {
-					case 'clearAll':
-						timerCnt=0;
-						field.clear();
-						i=0;
-						break;
 					case 'Reset':
 						timerCnt=0;
-						field.clear();
 						i=0;
-						field.select([dataRow[i].qElemNumber],true,false);
+						Reset(api);
 						break;
 					case 'forward':
 						timerCnt=0;
 						i++;
 						if(i>=cardinal)
 							i=0;
-						field.clear();
-						field.select([dataRow[i].qElemNumber],true,false);
+						api.selectValues(0, [i], false);
 						break;
 					case 'back':
 						timerCnt=0;
 						i--;
 						if(i<0)
 							i=cardinal-1;
-						field.clear();
-						field.select([dataRow[i].qElemNumber],true,false);
+						api.selectValues(0, [i], false);
 						break;
 					case 'play':
 						if(timerCnt==0)
 						{
 							stopFlag=false;
-							field.clear();
-							field.select([dataRow[i].qElemNumber],true,false);
+							setTimeout(	function() {
+											i++;
+											if(i>=cardinal)
+												i=0;
+											api.selectValues(0, [i], false);
+										},layout.interval);
 							timerCnt=cardinal;
 						}
 						else
 						{
 							alert("animation stoped");
+							// i++;
+							// api.selectValues(0, [i], false);
 							stopFlag=true;
 							timerCnt=0;
-							field.clear();
-							field.select([dataRow[i].qElemNumber],true,false);
 						}
 					break;
 				}
 			});
-
 		}
 	};
 });
