@@ -2,20 +2,21 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 	'use strict';
 	$("<style>").html(cssContent).appendTo("head");
 
-	var i=0,timerCnt=0;
+	var i=1,timerCnt=0;
 	var stopFlag=false;
 
 	function createBtn(cmd, text) {
 		return '<button class="qui-button" style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
 	}
 
-	function Reset(dataRow,controlApi)
-	{
-		if (!(controlApi.getDimensionInfos()[0].qStateCounts.qSelected==1 && controlApi.getDataRow(0)[0].qElemNumber==0))
-		{
-			controlApi.selectValues(0, [0], false);
-		}
-	}
+	// function Reset(controlApi)
+	// {
+	// 	qlik.app.field(eMonth).clear();
+	// 	if (!(controlApi.getDimensionInfos()[0].qStateCounts.qSelected==1 && controlApi.getDataRow(0)[0].qState=="S"))
+	// 	{
+	// 		controlApi.selectValues(0, [0], false);
+	// 	}
+	// }
 
 	return {
 		initialProperties : {
@@ -122,24 +123,6 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 							defaultValue : 0,
 							
 						},
-						qSortByState:{
-							type: "numeric",
-							component : "dropdown",
-							label : "Sort by State",
-							ref : "qListObjectDef.qDef.qSortCriterias.0.qSortByState",
-							options : [{
-								value : 1,
-								label : "Ascending"
-							}, {
-								value : 0,
-								label : "No"
-							}, {
-								value : -1,
-								label : "Descending"
-							}],
-							defaultValue : 0,
-							
-						},
 						qSortByFrequency:{
 							type: "numeric",
 							component : "dropdown",
@@ -207,15 +190,21 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 
 		paint : function($element, layout) {
 
-			//For Feedback:
-			// //Store the dimension into an array
-			var api=this.backendApi;
-			var tempDataRow=api.getDataRow(0);
-			var cardinal=api.getRowCount();
+			//Opens currApp
+			var app = qlik.currApp(this);
+			var api = this.backendApi;
+			var maxCnt=api.getRowCount()+1;
 
+			// var tempDataRow=api.getDataRow(0);
+			// console.log(tempDataRow[0].qText);
+			// console.log(tempDataRow[0].qState);
+			//Making buttons
 			var html = "<ul>";
-			//rendering buttons
+			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
+			html += "<br>";
+			html += "Index:"+i;
 			html += '<div class="qui-buttongroup">';
+			html += createBtn("Clear", "Clear");
 			html += createBtn("Reset", "Reset");
 			html += createBtn("back", "Prev");
 			html += createBtn("forward", "Next");
@@ -224,7 +213,6 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			else
 				html += createBtn("play", "Stop");
 			html += '</div>';
-
 			$element.html(html);
 
 			//trigers dimension incremental
@@ -234,9 +222,9 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								if(stopFlag==false)
 								{
 									i++;
-									if(i>=cardinal)
-										i=0;
-									api.selectValues(0, [i], false);
+									if(i>=maxCnt)
+										i=1;
+									app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
 								}
 							},layout.interval);
 				timerCnt--;
@@ -244,24 +232,31 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 
 			$element.find('button').on('qv-activate', function() {
 				switch($(this).data('cmd')) {
+					case 'Clear':
+						timerCnt=0;
+						i=1;
+						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
+						break;
 					case 'Reset':
 						timerCnt=0;
-						i=0;
-						Reset(api);
+						i=1;
+						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
 						break;
 					case 'forward':
 						timerCnt=0;
 						i++;
-						if(i>=cardinal)
-							i=0;
-						api.selectValues(0, [i], false);
+						if(i>=maxCnt)
+							i=1;
+						//api.selectValues(0, [i], false);
+						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
 						break;
 					case 'back':
 						timerCnt=0;
 						i--;
-						if(i<0)
-							i=cardinal-1;
-						api.selectValues(0, [i], false);
+						if(i<1)
+							i=maxCnt-1;
+						//api.selectValues(0, [i], false);
+						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
 						break;
 					case 'play':
 						if(timerCnt==0)
@@ -269,23 +264,26 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 							stopFlag=false;
 							setTimeout(	function() {
 											i++;
-											if(i>=cardinal)
-												i=0;
-											api.selectValues(0, [i], false);
+											if(i>=maxCnt)
+												i=1;
+											app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
 										},layout.interval);
-							timerCnt=cardinal;
+							timerCnt=maxCnt;
 						}
 						else
 						{
 							alert("animation stoped");
-							// i++;
-							// api.selectValues(0, [i], false);
+							i++;
+							if(i>=maxCnt)
+								i=1;
+							app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
 							stopFlag=true;
 							timerCnt=0;
 						}
 					break;
 				}
 			});
+
 		}
 	};
 });
