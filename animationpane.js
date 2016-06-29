@@ -2,7 +2,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 	'use strict';
 	$("<style>").html(cssContent).appendTo("head");
 
-	var i=1,timerCnt=0;
+	var i=0,timerCnt=0;
 	var stopFlag=false;
 
 	function createBtn(cmd, text) {
@@ -14,7 +14,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 	// 	qlik.app.field(eMonth).clear();
 	// 	if (!(controlApi.getDimensionInfos()[0].qStateCounts.qSelected==1 && controlApi.getDataRow(0)[0].qState=="S"))
 	// 	{
-	// 		controlApi.selectValues(0, [0], false);
+	// 		controlApi.select(0, [0], false);
 	// 	}
 	// }
 
@@ -193,7 +193,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			//Opens currApp
 			var app = qlik.currApp(this);
 			var api = this.backendApi;
-			var maxCnt=api.getRowCount()+1;
+			var maxCnt=api.getRowCount();
 
 			// var tempDataRow=api.getDataRow(0);
 			// console.log(tempDataRow[0].qText);
@@ -224,7 +224,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 									i++;
 									if(i>=maxCnt)
 										i=1;
-									app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
+									app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
 								}
 							},layout.interval);
 				timerCnt--;
@@ -234,29 +234,29 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 				switch($(this).data('cmd')) {
 					case 'Clear':
 						timerCnt=0;
-						i=1;
+						i=0;
 						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
 						break;
 					case 'Reset':
 						timerCnt=0;
-						i=1;
-						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
+						i=0;
+						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
 						break;
 					case 'forward':
 						timerCnt=0;
 						i++;
 						if(i>=maxCnt)
-							i=1;
-						//api.selectValues(0, [i], false);
-						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
+							i=0;
+						//api.select(0, [i], false);
+						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
 						break;
 					case 'back':
 						timerCnt=0;
 						i--;
-						if(i<1)
-							i=maxCnt-1;
-						//api.selectValues(0, [i], false);
-						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
+						if(i<0)
+							i=maxCnt;
+						//api.select(0, [i], false);
+						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
 						break;
 					case 'play':
 						if(timerCnt==0)
@@ -265,8 +265,8 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 							setTimeout(	function() {
 											i++;
 											if(i>=maxCnt)
-												i=1;
-											app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
+												i=0;
+											app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
 										},layout.interval);
 							timerCnt=maxCnt;
 						}
@@ -275,8 +275,8 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 							alert("animation stoped");
 							i++;
 							if(i>=maxCnt)
-								i=1;
-							app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).selectValues([i], false, false);
+								i=0;
+							app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
 							stopFlag=true;
 							timerCnt=0;
 						}
