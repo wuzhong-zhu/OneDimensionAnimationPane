@@ -3,11 +3,11 @@
 	"description" : "Single dimension animation pane",
 	"icon" : "list",
 	"type" : "visualization",
-	"version": "2.0",
+	"version": "2.1",
 	"author" : "Qlik",
 	"homepage" : "http://help.qlik.com/sense/en-US/developer",
 	"keywords" : "qlik-sense, visualization",
 	"license" : "MIT",
 	"repository" : "",
-    "dependencies" : { "qlik-sense" : ">=2.1.x" }
+    "dependencies" : { "qlik-sense" : ">=3.0.x" }
 }

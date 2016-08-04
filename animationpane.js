@@ -2,11 +2,11 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 	'use strict';
 	$("<style>").html(cssContent).appendTo("head");
 
-	var i=0,timerCnt=0;
+	var i=-1,timerCnt=0;
 	var stopFlag=false;
 
 	function createBtn(cmd, text) {
-		return '<button class="qui-button" style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
+		return '<button class="lui-button stepBut'+cmd+'" style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
 	}
 
 	// function Reset(controlApi)
@@ -194,26 +194,38 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			var app = qlik.currApp(this);
 			var api = this.backendApi;
 			var maxCnt=api.getRowCount();
+			var mydimTextValue ="No selection";
+			 var tempDataRow=api.getDataRow(i);
 
-			// var tempDataRow=api.getDataRow(0);
-			// console.log(tempDataRow[0].qText);
-			// console.log(tempDataRow[0].qState);
+			 //console.log(tempDataRow[0].qText);
+			 //console.log(tempDataRow[0].qState);
 			//Making buttons
-			var html = "<ul>";
+			if(i>=0){
+				mydimTextValue = tempDataRow[0].qText
+			};
+
+			var html = "";
 			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
+			html += " | "+mydimTextValue;
 			html += "<br>";
-			html += "Index:"+i;
-			html += '<div class="qui-buttongroup">';
-			html += createBtn("Clear", "Clear");
-			html += createBtn("Reset", "Reset");
-			html += createBtn("back", "Prev");
-			html += createBtn("forward", "Next");
-			if(timerCnt==0)
-				html += createBtn("play", "Play");
-			else
-				html += createBtn("play", "Stop");
+			html += '<div class="lui-buttongroup qui-buttongroup" style="margin-right:3px;">';
+			html += createBtn("Clear", '<span class="lui-icon lui-icon--clear-selections"></span>');
+			//html += createBtn("Reset", "Reset");
+			html += createBtn("back", '<span class="lui-icon lui-icon--selections-back"></span>');
+			html += createBtn("forward", '<span class="lui-icon lui-icon--selections-forward"></span>');
 			html += '</div>';
+			if(timerCnt==0)
+				html += createBtn("play", '<span class="lui-icon lui-icon--play"></span>');
+			else
+				html += '<button class="lui-button stepButplay" style="font-size:13px; color:red;" data-cmd="play">Stop</button>';
 			$element.html(html);
+
+
+			
+			var prevButObj = $element.find('.stepButback');
+			var nextButObj = $element.find('.stepButforward');
+			prevButObj.attr("disabled", false);
+			nextButObj.attr("disabled", false);
 
 			//trigers dimension incremental
 			if(timerCnt>0)
@@ -221,31 +233,43 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 				setTimeout(	function() {
 								if(stopFlag==false)
 								{
+									
 									i++;
 									if(i>=maxCnt)
-										i=1;
+										i=0;
 									app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+
 								}
 							},layout.interval);
 				timerCnt--;
 			}
 
+			
+			
+			if(i<1){
+				prevButObj.attr("disabled", true);
+			}; 
+			if(i>=maxCnt){ 
+				nextButObj.attr("disabled", true);
+			};
+
 			$element.find('button').on('qv-activate', function() {
 				switch($(this).data('cmd')) {
 					case 'Clear':
 						timerCnt=0;
-						i=0;
+						i=-1;
 						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
 						break;
-					case 'Reset':
-						timerCnt=0;
-						i=0;
-						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-						break;
+					//case 'Reset':
+					//	timerCnt=0;
+					//	i=-1;
+					//	app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+					//	break;
 					case 'forward':
 						timerCnt=0;
 						i++;
 						if(i>=maxCnt)
+							//nextButObj.attr("disabled", true);
 							i=0;
 						//api.select(0, [i], false);
 						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
@@ -254,6 +278,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 						timerCnt=0;
 						i--;
 						if(i<0)
+							//prevButObj.attr("disabled", true);
 							i=maxCnt;
 						//api.select(0, [i], false);
 						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
@@ -272,7 +297,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 						}
 						else
 						{
-							alert("animation stoped");
+							//alert("animation stoped");
 							i++;
 							if(i>=maxCnt)
 								i=0;
