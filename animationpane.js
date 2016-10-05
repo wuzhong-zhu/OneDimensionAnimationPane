@@ -8,7 +8,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 
 	function createBtn(cmd, text) {
 		return '<button class="lui-button stepBut'+cmd+'" style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
-	}
+	};
 
 	return {
 		initialProperties : {
@@ -109,7 +109,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								value : 0,
 								label : "No"
 							}, {
-								value : 1,
+								value : -1,
 								label : "Descending"
 							}],
 							defaultValue : 0,
@@ -127,7 +127,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								value : 0,
 								label : "No"
 							}, {
-								value : 1,
+								value : -1,
 								label : "Descending"
 							}],
 							defaultValue : 0,
@@ -145,7 +145,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								value : 0,
 								label : "No"
 							}, {
-								value : 1,
+								value : -1,
 								label : "Descending"
 							}],
 							defaultValue : 0,
@@ -163,7 +163,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								value : 0,
 								label : "No"
 							}, {
-								value : 1,
+								value : -1,
 								label : "Descending"
 							}],
 							defaultValue : 0,							
@@ -186,8 +186,21 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			var app = qlik.currApp(this);
 			var api = this.backendApi;
 			var maxCnt=api.getRowCount();
-			var data;=layout.qListObject.qDataPages[0].qMatrix;
+			var data=layout.qListObject.qDataPages[0].qMatrix;
+			if(data[0][0].qState=="S"){
+				var temp=data.shift();
+					data.splice(i, 0, temp);
+			}
 			console.log(data);
+
+			// function reconstructDataArray(dataArr,currIndex){
+
+			// 	if(data[0][0].qState=="S"){
+			// 		var temp=dataArr.shift();
+			// 		dataArr.splice(i, 0, temp);
+			// 	}
+			// 	console.log(dataArr);
+			// };
 
 			var html = "";
 			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
@@ -225,104 +238,58 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			$element.find('button').on('qv-activate', function() {
 				switch($(this).data('cmd')) {
 					case 'Clear':
-						clear();
+						timerCnt=0;
+						i=0;
+						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
 						break;
 					case 'Reset':
-						reset();
+						timerCnt=0;
+						i=0;
+						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+						api.selectValues(0, [data[0][0].qElemNumber], false);
 						break;
 					case 'forward':
-						forward();
+						timerCnt=0;
+						i++;
+						if(i>=maxCnt)
+							i=0;
+						api.selectValues(0, [data[i][0].qElemNumber], false);
 						break;
 					case 'back':
-						back();
+						timerCnt=0;
+						i--;
+						if(i<0)
+							i=maxCnt-1;
+						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+						api.selectValues(0, [data[i][0].qElemNumber], false);
 						break;
 					case 'play':
-						play()
+						if(timerCnt==0)
+						{
+							stopFlag=false;
+							setTimeout(	function() {
+											i++;
+											if(i>=maxCnt)
+												i=0;
+											// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+											api.selectValues(0, [data[i][0].qElemNumber], false);
+										},layout.interval);
+							timerCnt=maxCnt;
+						}
+						else
+						{
+							alert("animation stopped");
+							i++;
+							if(i>=maxCnt)
+								i=0;
+							// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+							api.selectValues(0, [data[i][0].qElemNumber], false);
+							stopFlag=true;
+							timerCnt=0;
+						}
 					break;
 				}
 			});
-
-			function clear(){
-				timerCnt=0;
-				i=0;
-				app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
-			}
-
-			function reset(){
-				timerCnt=0;
-				if(i==0){
-					if(data[0][0].qState!="S")
-						api.selectValues(0, [data[0][0].qElemNumber], false);
-				}
-				else
-				{
-					i=0;
-					// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-					if(data[0][0].qState!="S")
-						api.selectValues(0, [data[0][0].qElemNumber], false);
-					else
-						api.selectValues(0, [data[1][0].qElemNumber], false);
-				}
-				
-			}
-
-			function forward(){
-				timerCnt=0;
-				i++;
-				if(i>=maxCnt)
-					i=0;
-				// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-				if(data[i][0].qState!="S")
-					api.selectValues(0, [data[i][0].qElemNumber], false);
-				else
-					api.selectValues(0, [data[i+1][0].qElemNumber], false);
-			}
-
-			function back(){
-				timerCnt=0;
-				if(data[i][0].qState!="S" && i!=0)
-					api.selectValues(0, [data[i][0].qElemNumber], false);
-
-				i--;
-				if(i<0)
-					i=maxCnt-1;
-				// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-				console.log(data);
-				api.selectValues(0, [data[i+1][0].qElemNumber], false);
-			}
-
-			function play(){
-				if(timerCnt==0)
-				{
-					stopFlag=false;
-					setTimeout(	function() {
-									i++;
-									if(i>=maxCnt)
-										i=0;
-									// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-									if(data[i][0].qState!="S")
-										api.selectValues(0, [data[i][0].qElemNumber], false);
-									else
-										api.selectValues(0, [data[i+1][0].qElemNumber], false);
-								},layout.interval);
-					timerCnt=maxCnt;
-				}
-				else
-				{
-					alert("animation stopped");
-					i++;
-					if(i>=maxCnt)
-						i=0;
-					// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-					if(data[i][0].qState!="S")
-						api.selectValues(0, [data[i][0].qElemNumber], false);
-					else
-						api.selectValues(0, [data[i+1][0].qElemNumber], false);
-					stopFlag=true;
-					timerCnt=0;
-				}
-			}
-
 		}
 	};
 });
