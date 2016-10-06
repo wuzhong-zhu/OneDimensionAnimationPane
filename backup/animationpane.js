@@ -4,6 +4,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 
 	var i=0,timerCnt=0;
 	var stopFlag=false;
+	var initialized=false;
 
 	function createBtn(cmd, text) {
 		return '<button class="qui-button style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
@@ -18,13 +19,12 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 					qSortByState : 1
 				},
 				qInitialDataFetch : [{
-	            	"qTop": 0,
-	            	"qLeft": 0,
-					"qWidth" : 1,
-					"qHeight" : 50
+					qWidth : 1,
+					qHeight : 10000
 				}]
 			},
 			fixed : true,
+			width : 25,
 			percent : true,
 			selectionMode : "CONFIRM"
 		},
@@ -182,52 +182,16 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 
 		paint : function($element, layout) {
 
-			//Opens currApp and get key variables
+			//Opens currApp
 			var app = qlik.currApp(this);
 			var api = this.backendApi;
-			var maxCnt=layout.qListObject.qDimensionInfo.qCardinal;
+			var maxCnt=api.getRowCount();
 			var data=layout.qListObject.qDataPages[0].qMatrix;
-			var currentIndex,nextIndex,prevIndex;//for readability
 			if(data[0][0].qState=="S"){
-				currentIndex=i;
 				var temp=data.shift();
 					data.splice(i, 0, temp);
 			}
-			else
-				currentIndex=0;
-
-			if(currentIndex==0){
-				nextIndex=1;
-				prevIndex=maxCnt-1;
-			}
-			else if(currentIndex==maxCnt-1){
-				nextIndex=0;
-				prevIndex=maxCnt-2;
-			}
-			else{
-				nextIndex=currentIndex+1;
-				prevIndex=currentIndex-1;
-			}
-
-            var prevDataElemNumber,nextDataElemNumber;
-			var nextPage = [{
-                    qTop: nextIndex,
-                    qLeft: 0,
-                    qWidth: 1, //should be # of columns
-                    qHeight: 1
-            }];
-            var prevPage = [{
-                    qTop: prevIndex,
-                    qLeft: 0,
-                    qWidth: 1, //should be # of columns
-                    qHeight: 1
-            }];
-            api.getData( nextPage ).then( function ( dataPages ) {
-            	nextDataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
-				api.getData( prevPage ).then( function ( dataPages2 ) {
-	            	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
-	            });
-            });
+			console.log(data);
 
 			// function reconstructDataArray(dataArr,currIndex){
 
