@@ -21,7 +21,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 	            	"qTop": 0,
 	            	"qLeft": 0,
 					"qWidth" : 1,
-					"qHeight" : 50
+					"qHeight" : 1
 				}]
 			},
 			fixed : true,
@@ -232,6 +232,16 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
                     qHeight: 2,
             }];
 
+            api.getData( prevPage ).then( function ( dataPages2 ) {
+            	console.log("outside prev");
+            	console.log(prevPage);
+            	console.log(nextDataElemNumber=dataPages2[0].qMatrix[0][0]);
+			});
+
+
+
+
+
             var html = "";
 			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
 			// html += " | "+mydimTextValue;
@@ -272,7 +282,8 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 					case 'Clear':
 						timerCnt=0;
 						i=0;
-						app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
+						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
+						api.selectValues(0, [-1], false);
 						break;
 					case 'Reset':
 						timerCnt=0;
@@ -282,14 +293,13 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 				            	if(firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i!=0)
 				            		firstElemNumber=dataPages0[0].qMatrix[1][0].qElemNumber;
 				            	else if((firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i==0))
-				            		firstElemNumber=-1;
+				            		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
 				            	else
 				            		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
-
 			            		api.selectValues(0, [firstElemNumber], false);
+								i=0;
 			            	});
 						}
-						i=0;
 						break;
 					case 'forward':
 						timerCnt=0;
@@ -308,6 +318,9 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 							i=maxCnt-1;
 						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
 						api.getData( prevPage ).then( function ( dataPages2 ) {
+							console.log("inside prev");
+							console.log(dataPages2[0].qMatrix[0][0]);
+
 			            	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
 			            	api.selectValues(0, [prevDataElemNumber], false);
 			            });
@@ -350,26 +363,25 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 
 
 
-            api.getData( firstPage ).then( function ( dataPages0 ) {
-            	if(firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i!=0)
-            		firstElemNumber=dataPages0[0].qMatrix[1][0].qElemNumber;
-            	else if((firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i==0))
-            		firstElemNumber=-1;
-            	else
-            		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
+     //        api.getData( firstPage ).then( function ( dataPages0 ) {
+     //        	if(firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i!=0)
+     //        		firstElemNumber=dataPages0[0].qMatrix[1][0].qElemNumber;
+     //        	else if((firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i==0))
+     //        		firstElemNumber=-1;
+     //        	else
+     //        		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
 
-            	api.getData( nextPage ).then( function ( dataPages1 ) {
-	            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
-					api.getData( prevPage ).then( function ( dataPages2 ) {
-		            	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
-		            	console.log(nextDataElemNumber+" "+prevDataElemNumber);
+     //        	api.getData( nextPage ).then( function ( dataPages1 ) {
+	    //         	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
+					// api.getData( prevPage ).then( function ( dataPages2 ) {
+		   //          	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
 
-			            //main logic for rendering and operation
+			  //           //main logic for rendering and operation
 						
-						//main logic for rendering
-		            });//third getData
-	            });//second getData
-            });//first getData
+					// 	//main logic for rendering
+		   //          });//third getData
+	    //         });//second getData
+     //        });//first getData
 			
 
             
