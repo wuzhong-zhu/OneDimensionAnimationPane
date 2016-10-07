@@ -189,9 +189,10 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			var data=layout.qListObject.qDataPages[0].qMatrix;
 
 
-			var currentIndex,nextIndex,prevIndex;//for readability
+			var currentIndex,nextIndex,prevIndex;//for readability,can be omitted
 
-			//if any element is selected,currentIndex=i(actually can be omitted)
+			//selected data will be stored at the head of data array.
+			//therefore need a parsing logic for prevIndex and nextIndex
 			if(data[0][0].qState=="S" && maxCnt>1){
 				currentIndex=i;
 				//special case for currentIndex
@@ -207,7 +208,6 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 					nextIndex=currentIndex+1;
 					prevIndex=currentIndex;
 				}
-
 			}
 			else{
 				currentIndex=0;
@@ -322,9 +322,6 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 							i=maxCnt-1;
 						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
 						api.getData( prevPage ).then( function ( dataPages2 ) {
-							console.log("inside prev");
-							console.log(dataPages2[0].qMatrix[0][0]);
-
 			            	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
 			            	api.selectValues(0, [prevDataElemNumber], false);
 			            });
@@ -362,131 +359,6 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 					break;
 				}
 			});
-
-
-
-
-
-     //        api.getData( firstPage ).then( function ( dataPages0 ) {
-     //        	if(firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i!=0)
-     //        		firstElemNumber=dataPages0[0].qMatrix[1][0].qElemNumber;
-     //        	else if((firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i==0))
-     //        		firstElemNumber=-1;
-     //        	else
-     //        		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
-
-     //        	api.getData( nextPage ).then( function ( dataPages1 ) {
-	    //         	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
-					// api.getData( prevPage ).then( function ( dataPages2 ) {
-		   //          	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
-
-			  //           //main logic for rendering and operation
-						
-					// 	//main logic for rendering
-		   //          });//third getData
-	    //         });//second getData
-     //        });//first getData
-			
-
-            
-
-			// function reconstructDataArray(dataArr,currIndex){
-
-			// 	if(data[0][0].qState=="S"){
-			// 		var temp=dataArr.shift();
-			// 		dataArr.splice(i, 0, temp);
-			// 	}
-			// 	console.log(dataArr);
-			// };
-
-			// var html = "";
-			// html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
-			// // html += " | "+mydimTextValue;
-			// html += "<br>";
-			// html += "Index:"+i;
-			// html += "<br>";
-			// html += createBtn("Clear", "Clear");
-			// html += createBtn("Reset", "Reset");
-			// html += createBtn("back", "Prev");
-			// html += createBtn("forward", "Next");
-   //          if(timerCnt==0)
-   //              html += createBtn("play", "Play");
-   //          else
-   //              html += createBtn("play", "Stop");
-			// $element.html(html);
-
-			// //triggers dimension increment
-			// if(timerCnt>0)
-			// {
-			// 	setTimeout(	function() {
-			// 					if(stopFlag==false)
-			// 					{
-			// 						i++; 
-			// 						if(i>=maxCnt)
-			// 							i=0;
-			// 						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-			// 						api.selectValues(0, [data[i][0].qElemNumber], false);
-
-			// 					}
-			// 				},layout.interval);
-			// 	timerCnt--;
-			// }
-
-			// $element.find('button').on('qv-activate', function() {
-			// 	switch($(this).data('cmd')) {
-			// 		case 'Clear':
-			// 			timerCnt=0;
-			// 			i=0;
-			// 			app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
-			// 			break;
-			// 		case 'Reset':
-			// 			timerCnt=0;
-			// 			i=0;
-			// 			// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-			// 			api.selectValues(0, [data[0][0].qElemNumber], false);
-			// 			break;
-			// 		case 'forward':
-			// 			timerCnt=0;
-			// 			i++;
-			// 			if(i>=maxCnt)
-			// 				i=0;
-			// 			api.selectValues(0, [data[i][0].qElemNumber], false);
-			// 			break;
-			// 		case 'back':
-			// 			timerCnt=0;
-			// 			i--;
-			// 			if(i<0)
-			// 				i=maxCnt-1;
-			// 			// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-			// 			api.selectValues(0, [data[i][0].qElemNumber], false);
-			// 			break;
-			// 		case 'play':
-			// 			if(timerCnt==0)
-			// 			{
-			// 				stopFlag=false;
-			// 				setTimeout(	function() {
-			// 								i++;
-			// 								if(i>=maxCnt)
-			// 									i=0;
-			// 								// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-			// 								api.selectValues(0, [data[i][0].qElemNumber], false);
-			// 							},layout.interval);
-			// 				timerCnt=maxCnt;
-			// 			}
-			// 			else
-			// 			{
-			// 				alert("animation stopped");
-			// 				i++;
-			// 				if(i>=maxCnt)
-			// 					i=0;
-			// 				// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-			// 				api.selectValues(0, [data[i][0].qElemNumber], false);
-			// 				stopFlag=true;
-			// 				timerCnt=0;
-			// 			}
-			// 		break;
-			// 	}
-			// });
 		}
 	};
 });
