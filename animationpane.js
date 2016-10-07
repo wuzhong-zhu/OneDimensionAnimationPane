@@ -187,29 +187,43 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			var api = this.backendApi;
 			var maxCnt=layout.qListObject.qDimensionInfo.qCardinal;
 			var data=layout.qListObject.qDataPages[0].qMatrix;
+
+
 			var currentIndex,nextIndex,prevIndex;//for readability
-			var self=this;
 
 			//if any element is selected,currentIndex=i(actually can be omitted)
-			if(data[0][0].qState=="S"){
+			if(data[0][0].qState=="S" && maxCnt>1){
 				currentIndex=i;
-			}
-			else
-				currentIndex=0;
+				//special case for currentIndex
+				if(currentIndex==0){
+					nextIndex=1;
+					prevIndex=maxCnt-1;
+				}
+				else if(currentIndex==maxCnt-1){
+					nextIndex=1;
+					prevIndex=maxCnt-1;
+				}
+				else{
+					nextIndex=currentIndex+1;
+					prevIndex=currentIndex;
+				}
 
-			//special case for currentIndex
-			if(currentIndex==0){
-				nextIndex=1;
-				prevIndex=maxCnt-1;
-			}
-			else if(currentIndex==maxCnt-1){
-				nextIndex=0;
-				prevIndex=maxCnt-2;
 			}
 			else{
-				nextIndex=currentIndex+1;
-				prevIndex=currentIndex-1;
+				currentIndex=0;
+				if(maxCnt>1)
+				{
+					prevIndex=maxCnt-1;
+					nextIndex=1;
+				}
+				else
+				{
+					nextIndex=0;
+					prevIndex=0;
+				}
 			}
+
+			
 
 			//retrieve elemNumber of previous and next element
             var prevDataElemNumber,nextDataElemNumber,firstElemNumber;
@@ -231,16 +245,6 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
                     qWidth: 1,
                     qHeight: 2,
             }];
-
-            api.getData( prevPage ).then( function ( dataPages2 ) {
-            	console.log("outside prev");
-            	console.log(prevPage);
-            	console.log(nextDataElemNumber=dataPages2[0].qMatrix[0][0]);
-			});
-
-
-
-
 
             var html = "";
 			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
