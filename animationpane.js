@@ -188,14 +188,16 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			var maxCnt=layout.qListObject.qDimensionInfo.qCardinal;
 			var data=layout.qListObject.qDataPages[0].qMatrix;
 			var currentIndex,nextIndex,prevIndex;//for readability
+			var self=this;
+
+			//if any element is selected,currentIndex=i(actually can be omitted)
 			if(data[0][0].qState=="S"){
 				currentIndex=i;
-				var temp=data.shift();
-					data.splice(i, 0, temp);
 			}
 			else
 				currentIndex=0;
 
+			//special case for currentIndex
 			if(currentIndex==0){
 				nextIndex=1;
 				prevIndex=maxCnt-1;
@@ -209,36 +211,28 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 				prevIndex=currentIndex-1;
 			}
 
-            var prevDataElemNumber,nextDataElemNumber;
+			//retrieve elemNumber of previous and next element
+            var prevDataElemNumber,nextDataElemNumber,firstElemNumber;
 			var nextPage = [{
                     qTop: nextIndex,
                     qLeft: 0,
-                    qWidth: 1, //should be # of columns
+                    qWidth: 1, 
                     qHeight: 1
             }];
             var prevPage = [{
                     qTop: prevIndex,
                     qLeft: 0,
-                    qWidth: 1, //should be # of columns
+                    qWidth: 1, 
                     qHeight: 1
             }];
-            api.getData( nextPage ).then( function ( dataPages ) {
-            	nextDataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
-				api.getData( prevPage ).then( function ( dataPages2 ) {
-	            	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
-	            });
-            });
+            var firstPage = [{
+                    qTop: 0,
+                    qLeft: 0,
+                    qWidth: 1,
+                    qHeight: 2,
+            }];
 
-			// function reconstructDataArray(dataArr,currIndex){
-
-			// 	if(data[0][0].qState=="S"){
-			// 		var temp=dataArr.shift();
-			// 		dataArr.splice(i, 0, temp);
-			// 	}
-			// 	console.log(dataArr);
-			// };
-
-			var html = "";
+            var html = "";
 			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
 			// html += " | "+mydimTextValue;
 			html += "<br>";
@@ -254,7 +248,6 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
                 html += createBtn("play", "Stop");
 			$element.html(html);
 
-			//triggers dimension increment
 			if(timerCnt>0)
 			{
 				setTimeout(	function() {
@@ -264,7 +257,10 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 									if(i>=maxCnt)
 										i=0;
 									// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-									api.selectValues(0, [data[i][0].qElemNumber], false);
+									api.getData( nextPage ).then( function ( dataPages1 ) {
+						            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
+										api.selectValues(0, [nextDataElemNumber], false);
+							        });
 
 								}
 							},layout.interval);
@@ -280,16 +276,30 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 						break;
 					case 'Reset':
 						timerCnt=0;
-						i=0;
 						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-						api.selectValues(0, [data[0][0].qElemNumber], false);
+						if(firstElemNumber!=-1){
+							api.getData( firstPage ).then( function ( dataPages0 ) {
+				            	if(firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i!=0)
+				            		firstElemNumber=dataPages0[0].qMatrix[1][0].qElemNumber;
+				            	else if((firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i==0))
+				            		firstElemNumber=-1;
+				            	else
+				            		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
+
+			            		api.selectValues(0, [firstElemNumber], false);
+			            	});
+						}
+						i=0;
 						break;
 					case 'forward':
 						timerCnt=0;
 						i++;
 						if(i>=maxCnt)
 							i=0;
-						api.selectValues(0, [data[i][0].qElemNumber], false);
+						api.getData( nextPage ).then( function ( dataPages1 ) {
+			            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
+							api.selectValues(0, [nextDataElemNumber], false);
+				        });
 						break;
 					case 'back':
 						timerCnt=0;
@@ -297,7 +307,10 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 						if(i<0)
 							i=maxCnt-1;
 						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-						api.selectValues(0, [data[i][0].qElemNumber], false);
+						api.getData( prevPage ).then( function ( dataPages2 ) {
+			            	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
+			            	api.selectValues(0, [prevDataElemNumber], false);
+			            });
 						break;
 					case 'play':
 						if(timerCnt==0)
@@ -308,9 +321,12 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 											if(i>=maxCnt)
 												i=0;
 											// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-											api.selectValues(0, [data[i][0].qElemNumber], false);
+											api.getData( nextPage ).then( function ( dataPages1 ) {
+								            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
+												api.selectValues(0, [nextDataElemNumber], false);
+									        });
 										},layout.interval);
-							timerCnt=maxCnt;
+							timerCnt=maxCnt-1;
 						}
 						else
 						{
@@ -319,13 +335,142 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 							if(i>=maxCnt)
 								i=0;
 							// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-							api.selectValues(0, [data[i][0].qElemNumber], false);
+							api.getData( nextPage ).then( function ( dataPages1 ) {
+				            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
+								api.selectValues(0, [nextDataElemNumber], false);
+					        });
 							stopFlag=true;
 							timerCnt=0;
 						}
 					break;
 				}
 			});
+
+
+
+
+
+            api.getData( firstPage ).then( function ( dataPages0 ) {
+            	if(firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i!=0)
+            		firstElemNumber=dataPages0[0].qMatrix[1][0].qElemNumber;
+            	else if((firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i==0))
+            		firstElemNumber=-1;
+            	else
+            		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
+
+            	api.getData( nextPage ).then( function ( dataPages1 ) {
+	            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
+					api.getData( prevPage ).then( function ( dataPages2 ) {
+		            	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
+		            	console.log(nextDataElemNumber+" "+prevDataElemNumber);
+
+			            //main logic for rendering and operation
+						
+						//main logic for rendering
+		            });//third getData
+	            });//second getData
+            });//first getData
+			
+
+            
+
+			// function reconstructDataArray(dataArr,currIndex){
+
+			// 	if(data[0][0].qState=="S"){
+			// 		var temp=dataArr.shift();
+			// 		dataArr.splice(i, 0, temp);
+			// 	}
+			// 	console.log(dataArr);
+			// };
+
+			// var html = "";
+			// html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
+			// // html += " | "+mydimTextValue;
+			// html += "<br>";
+			// html += "Index:"+i;
+			// html += "<br>";
+			// html += createBtn("Clear", "Clear");
+			// html += createBtn("Reset", "Reset");
+			// html += createBtn("back", "Prev");
+			// html += createBtn("forward", "Next");
+   //          if(timerCnt==0)
+   //              html += createBtn("play", "Play");
+   //          else
+   //              html += createBtn("play", "Stop");
+			// $element.html(html);
+
+			// //triggers dimension increment
+			// if(timerCnt>0)
+			// {
+			// 	setTimeout(	function() {
+			// 					if(stopFlag==false)
+			// 					{
+			// 						i++; 
+			// 						if(i>=maxCnt)
+			// 							i=0;
+			// 						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+			// 						api.selectValues(0, [data[i][0].qElemNumber], false);
+
+			// 					}
+			// 				},layout.interval);
+			// 	timerCnt--;
+			// }
+
+			// $element.find('button').on('qv-activate', function() {
+			// 	switch($(this).data('cmd')) {
+			// 		case 'Clear':
+			// 			timerCnt=0;
+			// 			i=0;
+			// 			app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
+			// 			break;
+			// 		case 'Reset':
+			// 			timerCnt=0;
+			// 			i=0;
+			// 			// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+			// 			api.selectValues(0, [data[0][0].qElemNumber], false);
+			// 			break;
+			// 		case 'forward':
+			// 			timerCnt=0;
+			// 			i++;
+			// 			if(i>=maxCnt)
+			// 				i=0;
+			// 			api.selectValues(0, [data[i][0].qElemNumber], false);
+			// 			break;
+			// 		case 'back':
+			// 			timerCnt=0;
+			// 			i--;
+			// 			if(i<0)
+			// 				i=maxCnt-1;
+			// 			// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+			// 			api.selectValues(0, [data[i][0].qElemNumber], false);
+			// 			break;
+			// 		case 'play':
+			// 			if(timerCnt==0)
+			// 			{
+			// 				stopFlag=false;
+			// 				setTimeout(	function() {
+			// 								i++;
+			// 								if(i>=maxCnt)
+			// 									i=0;
+			// 								// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+			// 								api.selectValues(0, [data[i][0].qElemNumber], false);
+			// 							},layout.interval);
+			// 				timerCnt=maxCnt;
+			// 			}
+			// 			else
+			// 			{
+			// 				alert("animation stopped");
+			// 				i++;
+			// 				if(i>=maxCnt)
+			// 					i=0;
+			// 				// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
+			// 				api.selectValues(0, [data[i][0].qElemNumber], false);
+			// 				stopFlag=true;
+			// 				timerCnt=0;
+			// 			}
+			// 		break;
+			// 	}
+			// });
 		}
 	};
 });
