@@ -250,7 +250,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
 			// html += " | "+mydimTextValue;
 			html += "<br>";
-			html += "Index:"+i;
+			html += "Index:"+i+"/"+(maxCnt-1);
 			html += "<br>";
 			html += createBtn("Clear", "Clear");
 			html += createBtn("Reset", "Reset");
