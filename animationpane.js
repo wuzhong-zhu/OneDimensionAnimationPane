@@ -5,8 +5,8 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 	var i=0,timerCnt=0;
 	var stopFlag=false;
 
-	function createBtn(cmd, text) {
-		return '<button class="qui-button style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
+	function createBtn(cmd, text, icon) {
+		return '<button class="lui-button" data-cmd="' + cmd + '" title="' + text + '"><span class="lui-button__icon  lui-icon  lui-icon--' + icon + '"></span></button>';
 	};
 
 	return {
@@ -177,12 +177,12 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			}
 		},
 		snapshot : {
-			canTakeSnapshot : true
+			canTakeSnapshot : false
 		},
 
 		paint : function($element, layout) {
 
-			//Opens currApp and get key variables
+			//Uses currApp and get key variables
 			var app = qlik.currApp(this);
 			var api = this.backendApi;
 			var maxCnt=layout.qListObject.qDimensionInfo.qCardinal;
@@ -247,19 +247,20 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
             }];
 
             var html = "";
-			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
-			// html += " | "+mydimTextValue;
-			html += "<br>";
-			html += "Index:"+i+"/"+(maxCnt-1);
-			html += "<br>";
-			html += createBtn("Clear", "Clear");
-			html += createBtn("Reset", "Reset");
-			html += createBtn("back", "Prev");
-			html += createBtn("forward", "Next");
+//			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
+//			html += "<br>" + Index:"+i+"/"+(maxCnt-1) + "<br>";
+
+			html += '<div class="lui-buttongroup">';
+			html += createBtn("Clear", "Clear", "clear-selections");
+			html += createBtn("Reset", "Reset", "selections-reload");
+			html += '</div>&nbsp;<div class="lui-buttongroup">';
+			html += createBtn("back", "Previous", "arrow-left");
+			html += createBtn("forward", "Next", "arrow-right");
+            html += '</div>&nbsp;';
             if(timerCnt==0)
-                html += createBtn("play", "Play");
+                html += createBtn("play", "Play", "triangle-right lui-fade-button--success");
             else
-                html += createBtn("play", "Stop");
+                html += createBtn("play", "Stop", "close lui-fade-button--danger");
 			$element.html(html);
 
 			if(timerCnt>0)
