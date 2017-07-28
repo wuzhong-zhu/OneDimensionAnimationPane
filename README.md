@@ -17,12 +17,18 @@ Clear- Clear all selection
 
 Reset- Reset the index to the first element
 
-Prev- Move to last element
+Play- Start animation. Think about this as automated selection along our dimension, with fixed time interval. All the chart on the sheet will start transforming together.
 
+Sort- Change which direction you go through the dimension
+
+Prev 10- Move 10 elements back
+Prev   - Move 1 element back
 Next- Move to next element
+Next- Move to 10 elements forward
 
-Start- Start animation. Think about this as automated selection along our dimension, with fixed time interval. All the chart on the sheet will start transforming together.
+
 
 Update:
+fix freezing issue
 Solve sorting issue, replace field manipulation with hypercube manipulation.
 UI change thanks to murraygm
