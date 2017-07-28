@@ -3,6 +3,9 @@ Sense Extension-One Dimension Navigation/animation Panel
 
 This is a Qlik sense extension which enables navigation/autoplay along selected field-original or calculated.
 
+![alt text](http://g.recordit.co/IvMX9tPYa4.gif)
+
+
 The sole purpose of this extension is to simplify the process of selecting certain field in sequence.
 
 When I do data expoloration, often I got annoyed by Qlik's selection mechanism. For example, to browse through monthly report for a year, I will have to create a month table and click every single column in sequence. I hate it especially when I click on the wrong column and it has interrupted my thinking uncountable times. 
