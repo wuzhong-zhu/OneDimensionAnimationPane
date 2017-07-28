@@ -1,4 +1,4 @@
-define(["jquery", "text!./animationpane.css","qlik","text!./angular-progress.js"], function($, cssContent,qlik,ProgressBar ) {
+define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qlik ) {
 	'use strict';
 	$("<style>").html(cssContent).appendTo("head");
 	var pause = 2;
