@@ -3,6 +3,9 @@ Sense Extension-One Dimension Navigation/animation Panel
 
 This is a Qlik sense extension which enables navigation/autoplay along selected field-original or calculated.
 
+![alt text](http://g.recordit.co/IvMX9tPYa4.gif)
+
+
 The sole purpose of this extension is to simplify the process of selecting certain field in sequence.
 
 When I do data expoloration, often I got annoyed by Qlik's selection mechanism. For example, to browse through monthly report for a year, I will have to create a month table and click every single column in sequence. I hate it especially when I click on the wrong column and it has interrupted my thinking uncountable times. 
@@ -14,12 +17,18 @@ Clear- Clear all selection
 
 Reset- Reset the index to the first element
 
-Prev- Move to last element
+Play- Start animation. Think about this as automated selection along our dimension, with fixed time interval. All the chart on the sheet will start transforming together.
 
+Sort- Change which direction you go through the dimension
+
+Prev 10- Move 10 elements back
+Prev   - Move 1 element back
 Next- Move to next element
+Next- Move to 10 elements forward
 
-Start- Start animation. Think about this as automated selection along our dimension, with fixed time interval. All the chart on the sheet will start transforming together.
+
 
 Update:
+fix freezing issue
 Solve sorting issue, replace field manipulation with hypercube manipulation.
 UI change thanks to murraygm

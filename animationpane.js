@@ -2,12 +2,64 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 	'use strict';
 	$("<style>").html(cssContent).appendTo("head");
 
+	var startFlag=true;
 	var i=0,timerCnt=0;
 	var stopFlag=false;
+	var reverseFlag=false;
+	var varmaxCnt=0;
+	var maxCnt=0;
 
-	function createBtn(cmd, text) {
-		return '<button class="qui-button style="font-size:13px;" data-cmd="' + cmd + '">' + text + '</button>';
+	function createBtn(cmd, text, icon) {
+		return '<button class="lui-button" data-cmd="' + cmd + '" title="' + text + '"><span class="lui-button__icon  lui-icon  lui-icon--' + icon + '"></span></button>';
 	};
+
+	function htmlDraw(reverseFlag,startFlag,stopFlag,maxCnt,i) {
+				// console.log("Redrawing html")
+				var html = "";
+				html += '<div class="lui-buttongroup">';
+				html += "<div class='test' style='width:170px; background-color:rgb(245, 245, 245); height:4px;border:1px;border-style:solid;border-color:rgb(175, 175, 175);'>";
+				html += "<div class='barcode' style='width:" + Math.round((i/ (maxCnt-1)*170)) + "px; background-color:rgb(91, 192, 222); height:4px;'></div>";
+				html += '</div></div></div><br>'
+				html += '<div class="lui-buttongroup">';
+				html += createBtn("Clear", "Clear", "clear-selections");
+				html += createBtn("Reset", "Reset", "selections-reload");
+				if(startFlag==true) {
+					html += createBtn("play", "Play", "triangle-right lui-fade-button--success");
+						}
+						else {
+							if(stopFlag==true) {
+								html += createBtn("play", "Continue", "triangle-right lui-fade-button--warning");
+										}
+										else {
+											html += createBtn("play", "startFlag", "close lui-fade-button--warning");
+										}
+								}
+				if(reverseFlag==false) {
+						html += createBtn("reverseFlag", "Play ascending","close lui-icon--ascending");
+						}
+						else {
+						html += createBtn("reverseFlag", "Play descending","close lui-icon--descending");
+								}
+				html += '</div>';
+				html += '<div class="lui-buttongroup">';
+				html += createBtn("back10", "Prev 10", "arrow-left lui-fade-button--warning");
+				html += createBtn("back", "Previous", "arrow-left");
+				html += createBtn("forward", "Next", "arrow-right");
+				html += createBtn("forward10", "Next 10", "arrow-right lui-fade-button--warning");
+				html += '</div>';
+				return html;
+	};
+
+	function updateIndex(i) {
+		var returnPage;
+				 returnPage = [{
+								 qTop: i,
+								 qLeft: 0,
+								 qWidth: 1,
+								 qHeight: 1
+				 }];
+				 return returnPage;
+	}
 
 	return {
 		initialProperties : {
@@ -18,8 +70,8 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 					qSortByState : 1
 				},
 				qInitialDataFetch : [{
-	            	"qTop": 0,
-	            	"qLeft": 0,
+        	"qTop": 0,
+        	"qLeft": 0,
 					"qWidth" : 1,
 					"qHeight" : 1
 				}]
@@ -113,7 +165,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								label : "Descending"
 							}],
 							defaultValue : 0,
-							
+
 						},
 						qSortByFrequency:{
 							type: "numeric",
@@ -131,7 +183,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								label : "Descending"
 							}],
 							defaultValue : 0,
-							
+
 						},
 						qSortByNumeric:{
 							type: "numeric",
@@ -149,7 +201,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								label : "Descending"
 							}],
 							defaultValue : 0,
-							
+
 						},
 						qSortByAscii:{
 							type: "numeric",
@@ -166,7 +218,7 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 								value : -1,
 								label : "Descending"
 							}],
-							defaultValue : 0,							
+							defaultValue : 0,
 						}
 					}
 				},
@@ -177,188 +229,186 @@ define(["jquery", "text!./animationpane.css","qlik"], function($, cssContent,qli
 			}
 		},
 		snapshot : {
-			canTakeSnapshot : true
+			canTakeSnapshot : false
 		},
 
 		paint : function($element, layout) {
-
 			//Opens currApp and get key variables
 			var app = qlik.currApp(this);
 			var api = this.backendApi;
 			var maxCnt=layout.qListObject.qDimensionInfo.qCardinal;
-			var data=layout.qListObject.qDataPages[0].qMatrix;
+			var data=	 layout.qListObject.qDataPages[0].qMatrix;
+			var dataElemNumber;
 
+						$element.html( htmlDraw(reverseFlag,startFlag,stopFlag,maxCnt,i));
 
-			var currentIndex,nextIndex,prevIndex;//for readability,can be omitted
-
-			//selected data will be stored at the head of data array.
-			//therefore need a parsing logic for prevIndex and nextIndex
-			if(data[0][0].qState=="S" && maxCnt>1){
-				currentIndex=i;
-				//special case for currentIndex
-				if(currentIndex==0){
-					nextIndex=1;
-					prevIndex=maxCnt-1;
-				}
-				else if(currentIndex==maxCnt-1){
-					nextIndex=1;
-					prevIndex=maxCnt-1;
-				}
-				else{
-					nextIndex=currentIndex+1;
-					prevIndex=currentIndex;
-				}
-			}
-			else{
-				currentIndex=0;
-				if(maxCnt>1)
-				{
-					prevIndex=maxCnt-1;
-					nextIndex=1;
-				}
-				else
-				{
-					nextIndex=0;
-					prevIndex=0;
-				}
-			}
-
-			
-
-			//retrieve elemNumber of previous and next element
-            var prevDataElemNumber,nextDataElemNumber,firstElemNumber;
-			var nextPage = [{
-                    qTop: nextIndex,
-                    qLeft: 0,
-                    qWidth: 1, 
-                    qHeight: 1
-            }];
-            var prevPage = [{
-                    qTop: prevIndex,
-                    qLeft: 0,
-                    qWidth: 1, 
-                    qHeight: 1
-            }];
-            var firstPage = [{
-                    qTop: 0,
-                    qLeft: 0,
-                    qWidth: 1,
-                    qHeight: 2,
-            }];
-
-            var html = "";
-			html += layout.qListObject.qDimensionInfo.qGroupFieldDefs[0];
-			// html += " | "+mydimTextValue;
-			html += "<br>";
-			html += "Index:"+i+"/"+(maxCnt-1);
-			html += "<br>";
-			html += createBtn("Clear", "Clear");
-			html += createBtn("Reset", "Reset");
-			html += createBtn("back", "Prev");
-			html += createBtn("forward", "Next");
-            if(timerCnt==0)
-                html += createBtn("play", "Play");
-            else
-                html += createBtn("play", "Stop");
-			$element.html(html);
-
-			if(timerCnt>0)
-			{
-				setTimeout(	function() {
-								if(stopFlag==false)
-								{
-									i++; 
-									if(i>=maxCnt)
-										i=0;
-									// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-									api.getData( nextPage ).then( function ( dataPages1 ) {
-						            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
-										api.selectValues(0, [nextDataElemNumber], false);
-							        });
-
+						if(timerCnt>0)
+							{
+								setTimeout(	function() {
+												if(stopFlag==false)
+												{
+													if(timerCnt==1) {
+														startFlag=true;
+													}
+													if(reverseFlag==false) {
+													i++;
+													}
+													else {
+													i--;
+												  }
+													api.getData( updateIndex(i) ).then( function ( dataPages ) {
+										        dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+														api.selectValues(0, [dataElemNumber], false);
+											        });
+												}
+												else {
+													timerCnt = 0;
+													api.getData( updateIndex(i) ).then( function ( dataPages ) {
+														dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+														api.selectValues(0, [dataElemNumber], false);
+													});
+													$element.html( htmlDraw(reverseFlag,startFlag,stopFlag,timerCnt,maxCnt,varmaxCnt,i));
+												}
+											},layout.interval);
+								timerCnt--;
 								}
-							},layout.interval);
-				timerCnt--;
-			}
 
-			$element.find('button').on('qv-activate', function() {
-				switch($(this).data('cmd')) {
-					case 'Clear':
-						timerCnt=0;
-						i=0;
-						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).clear();
-						api.selectValues(0, [-1], false);
-						break;
-					case 'Reset':
-						timerCnt=0;
-						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-						if(firstElemNumber!=-1){
-							api.getData( firstPage ).then( function ( dataPages0 ) {
-				            	if(firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i!=0)
-				            		firstElemNumber=dataPages0[0].qMatrix[1][0].qElemNumber;
-				            	else if((firstElemNumber=dataPages0[0].qMatrix[0][0].qState=="S" && i==0))
-				            		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
-				            	else
-				            		firstElemNumber=dataPages0[0].qMatrix[0][0].qElemNumber;
-			            		api.selectValues(0, [firstElemNumber], false);
-								i=0;
-			            	});
-						}
-						break;
-					case 'forward':
-						timerCnt=0;
-						i++;
-						if(i>=maxCnt)
-							i=0;
-						api.getData( nextPage ).then( function ( dataPages1 ) {
-			            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
-							api.selectValues(0, [nextDataElemNumber], false);
-				        });
-						break;
-					case 'back':
-						timerCnt=0;
-						i--;
-						if(i<0)
-							i=maxCnt-1;
-						// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-						api.getData( prevPage ).then( function ( dataPages2 ) {
-			            	prevDataElemNumber=dataPages2[0].qMatrix[0][0].qElemNumber;
-			            	api.selectValues(0, [prevDataElemNumber], false);
-			            });
-						break;
-					case 'play':
-						if(timerCnt==0)
-						{
-							stopFlag=false;
-							setTimeout(	function() {
-											i++;
-											if(i>=maxCnt)
-												i=0;
-											// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-											api.getData( nextPage ).then( function ( dataPages1 ) {
-								            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
-												api.selectValues(0, [nextDataElemNumber], false);
+						$element.find('button').on('qv-activate', function() {
+							switch($(this).data('cmd')) {
+								case 'Clear':
+									stopFlag=true;
+									timerCnt=0;
+									i=0;
+									startFlag=true;
+									api.selectValues(0, [-1], false);
+									break;
+
+								case 'Reset':
+									stopFlag=true;
+									i=0;
+									timerCnt = 0;
+									startFlag =true;
+									api.getData( updateIndex(i) ).then( function ( dataPages ) {
+						            	dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+													api.selectValues(0, [dataElemNumber], false);
+												});
+									break;
+
+								case 'forward':
+									stopFlag=true;
+									i++;
+									startFlag = false;
+									timerCnt = 0;
+									if(i>=maxCnt) {
+										i=0;
+									}
+									api.getData( updateIndex(i) ).then( function ( dataPages ) {
+						            	dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+													api.selectValues(0, [dataElemNumber], false);
+							        });
+									break;
+
+								case 'back':
+									stopFlag=true;
+									i--;
+									startFlag = false;
+									timerCnt = 0;
+									if(i<0) {
+										i=maxCnt-1;
+									}
+									api.getData( updateIndex(i) ).then( function ( dataPages ) {
+						            	dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+													api.selectValues(0, [dataElemNumber], false);
+							        });
+									break;
+
+								case 'forward10':
+										stopFlag=true;
+										i=i+10;
+										startFlag = false;
+										timerCnt = 0;
+										if(i>=maxCnt) {
+											i=0;
+										}
+										api.getData( updateIndex(i) ).then( function ( dataPages ) {
+							            	dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+														api.selectValues(0, [dataElemNumber], false);
+								        });
+										break;
+
+								case 'back10':
+										stopFlag=true;
+										i=i-10;
+										startFlag = false;
+										timerCnt = 0;
+										if(i<0) {
+											i=maxCnt-1;
+										}
+										api.getData( updateIndex(i) ).then( function ( dataPages ) {
+							            	dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+														api.selectValues(0, [dataElemNumber], false);
+								        });
+										break;
+
+								case 'play':
+										if(timerCnt==0)
+										{
+											if(startFlag==true && reverseFlag==false) {
+											i = 0;
+											varmaxCnt = (maxCnt-1);
+											}
+											else {
+												if(startFlag==true && reverseFlag == true) {
+													i = (maxCnt-1);
+													varmaxCnt = maxCnt -1;
+													}
+											}
+											if(startFlag==false && reverseFlag == false) {
+											varmaxCnt = (maxCnt-1 - i);
+											}
+											else {
+												if(startFlag==false && reverseFlag == true) {
+													varmaxCnt = i;
+												}
+											}
+											startFlag=false;
+											stopFlag=false;
+											console.log("play start")
+											api.getData( updateIndex(i) ).then( function ( dataPages ) {
+								            	dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+															api.selectValues(0, [dataElemNumber], false);
 									        });
-										},layout.interval);
-							timerCnt=maxCnt-1;
-						}
-						else
-						{
-							alert("animation stopped");
-							i++;
-							if(i>=maxCnt)
-								i=0;
-							// app.field(layout.qListObject.qDimensionInfo.qGroupFieldDefs[0]).select([i], false, false);
-							api.getData( nextPage ).then( function ( dataPages1 ) {
-				            	nextDataElemNumber=dataPages1[0].qMatrix[0][0].qElemNumber;
-								api.selectValues(0, [nextDataElemNumber], false);
-					        });
-							stopFlag=true;
-							timerCnt=0;
-						}
-					break;
-				}
-			});
-		}
+											timerCnt=varmaxCnt;
+											}
+										else
+											{
+											stopFlag=true;
+											api.getData( updateIndex(i) ).then( function ( dataPages ) {
+															dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+															api.selectValues(0, [dataElemNumber], false);
+													});
+											}
+									break;
+
+								case 'reverseFlag':
+									if(reverseFlag==false) {
+											reverseFlag=true;
+										}
+									else {
+											reverseFlag=false;
+										}
+									if(startFlag==false && stopFlag==false) {
+										stopFlag=true;
+										timerCnt = 0;
+											}
+											console.log("update reverseFlag");
+											api.getData( updateIndex(i) ).then( function ( dataPages ) {
+															dataElemNumber=dataPages[0].qMatrix[0][0].qElemNumber;
+															api.selectValues(0, [dataElemNumber], false);
+													});
+								break;
+							}
+						});
+					}
 	};
 });
